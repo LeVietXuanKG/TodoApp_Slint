@@ -14,10 +14,7 @@ component MainWindow inherits Window {
     icon:   @image-url("../image/icons/clock.png");
     in property <[TodoItem]> todo_model ;
     
-    in property <bool> show-header: false;
-    in-out property <bool> is-sort-by-name: false;
-    in-out property <bool> hide-done-items: false;
-
+    
     callback todo_added(string);
     callback remove_done();
     callback popup_confirmed;
