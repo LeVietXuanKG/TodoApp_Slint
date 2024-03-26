@@ -1,0 +1,109 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { SpinBox, Button, CheckBox, Slider, LineEdit, ScrollView, ListView,
+    HorizontalBox, VerticalBox, GridBox, StandardButton, Palette } from "std-widgets.slint";
+
+
+export struct TodoItem  {
+    title: string,
+    checked: bool,
+}
+
+component MainWindow inherits Window {
+    icon:   @image-url("../image/icons/clock.png");
+    in property <[TodoItem]> todo_model ;
+    
+    in property <bool> show-header: false;
+    in-out property <bool> is-sort-by-name: false;
+    in-out property <bool> hide-done-items: false;
+
+    callback todo_added(string);
+    callback remove_done();
+    callback popup_confirmed;
+    callback show_confirm_popup;
+    callback change_element(int);
+    
+
+    show_confirm_popup => { confirm_popup.show(); }
+
+    preferred-width: 400px;
+    preferred-height: 600px;
+
+    confirm_popup := PopupWindow {
+
+        x: 40px;
+        y: 100px;
+        width: min(confirm_popup_layout.preferred-width, root.width - 80px);
+        close-on-click: false;
+
+        Rectangle {
+            background: Palette.background;
+            border-color: Palette.border;
+            border-width: 1px;
+        }
+
+        confirm_popup_layout := Dialog {
+            height:100%; width: 100%;
+
+            confirm_popup_text := Text {
+                text: "Remove Item done, Are you sure?";
+                wrap: word-wrap;
+            }
+
+            StandardButton { kind: yes; clicked =>  {   root.remove_done();confirm-popup.close(); } }
+            StandardButton { kind: no;  clicked =>  {   confirm-popup.close();} }
+        }
+    }
+
+
+    VerticalBox {
+        HorizontalBox {
+            padding: 0px;
+            text-edit := LineEdit {
+                accepted(text) => {
+                    root.todo_added(self.text);
+                    self.text = "";
+                }
+
+                placeholder-text: "What needs to be done?";
+            }
+
+            btn := Button {
+                clicked => {
+                    root.todo_added(text-edit.text);
+                    text-edit.text = "";
+                }
+
+                text: "Add New Entry";
+                enabled: text-edit.text != "";
+            }
+        }
+
+        
+
+        list-view := ListView {
+            for todo[index] in root.todo_model:  HorizontalLayout {
+                CheckBox {
+                    toggled => {
+                        todo.checked = self.checked;
+                        root.change_element(index);
+                    }
+
+                    text: todo.title;
+                    checked: todo.checked;
+                }
+            }
+        }
+        HorizontalBox {
+            padding: 0px;
+            alignment: end;
+
+            Button {
+                clicked => { root.show_confirm_popup();}
+
+                text: "Remove Done Items";
+            }
+        }
+    }
+}
